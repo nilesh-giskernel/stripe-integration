@@ -7,6 +7,8 @@ const stripe = require("stripe")(
   "sk_test_51P3c0JSAfVC4YVUYV1FtgetBWLpXkNkoqDnfT62VXwsQYSZDn0BsFfGwiuqCd15MZXVcXpOgWeLollKp6e4f8Hum00g5Y5f39i"
 );
 const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+app.use(bodyParser.raw({ type: "*/*" })); 
 app.use(express.json());
 //mongodb connections
 const connectDb = async () => {
@@ -57,16 +59,13 @@ app.post("/checkout", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-const bodyParser = require("body-parser");
 
-app.post("/webhook", bodyParser.raw({ type: 'application/json' }), async (request, response) => {
+app.post("/webhook", async (request, response) => {
   const sig = request.headers["stripe-signature"];
   let event;
   try {
-    // Parse the request body as a string
-    const rawBody = request.body;
     event = stripe.webhooks.constructEvent(
-      rawBody,
+      request.body, // Pass raw request body
       sig,
       process.env.SECRET_STRIPE_KEY
     );
