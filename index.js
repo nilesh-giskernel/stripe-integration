@@ -28,7 +28,7 @@ app.post("/checkout", async (req, res) => {
       description: "Payment for items",
     });
     console.log(paymentIntent, "step1");
-    
+
     const session = await stripe.checkout.sessions.create({
       billing_address_collection: "required",
       payment_method_types: ["card"],
@@ -70,7 +70,7 @@ app.post("/webhook", async (request, response) => {
     );
   } catch (err) {
     console.error("Webhook signature verification failed.", err);
-    return res.sendStatus(400);
+    return response.sendStatus(400);
   }
 
   // Handle the event
@@ -90,7 +90,7 @@ app.post("/webhook", async (request, response) => {
       console.log(`Unhandled event type: ${event.type}`);
   }
 
-  res.sendStatus(200);
+  response.sendStatus(200);
 });
 
 app.listen(8000, () => console.log("Running on port 8000"));

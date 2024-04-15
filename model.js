@@ -1,5 +1,12 @@
 const mongoose = require("mongoose")
+const NewDATASchema = new mongoose.Schema({
+    session: Object, 
+  });
+exports.NewDATA = mongoose.model('NewDATA', NewDATASchema);
 
-exports.NewDATA = mongoose.model('NewDATA', { name: String });
 
-exports.Cats = mongoose.model('Cats', { name: String });
+const catSchema = new mongoose.Schema({
+  session: Object, 
+});
+
+exports.Cats = mongoose.model('Cats', catSchema);
