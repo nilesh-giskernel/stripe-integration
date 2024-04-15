@@ -7,8 +7,7 @@ const stripe = require("stripe")(
   "sk_test_51P3c0JSAfVC4YVUYV1FtgetBWLpXkNkoqDnfT62VXwsQYSZDn0BsFfGwiuqCd15MZXVcXpOgWeLollKp6e4f8Hum00g5Y5f39i"
 );
 const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-app.use(bodyParser.raw({ type: "*/*" })); 
+
 app.use(express.json());
 //mongodb connections
 const connectDb = async () => {
@@ -59,7 +58,8 @@ app.post("/checkout", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
+const bodyParser = require("body-parser");
+app.use(bodyParser.raw({ type: "*/*" })); 
 app.post("/webhook", async (request, response) => {
   const sig = request.headers["stripe-signature"];
   let event;
