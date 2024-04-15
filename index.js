@@ -62,23 +62,35 @@ app.post("/checkout", async (req, res) => {
 });
 const bodyParser = require("body-parser");
 
-app.post("/webhook", bodyParser.json(), async (request, response) => {
-  const payload = request.body;
+app.post("/webhook", async (request, response) => {
+  const sig = request.headers["stripe-signature"];
   let event;
-
   try {
-    event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
-    const newdata = new NewDATA(event);
-    const data = await newdata.save();
-    console.log(data, "Got payload: ");
+    event = stripe.webhooks.constructEvent(request.body, sig, process.env.SECRET_STRIPE_KEY);
   } catch (err) {
-    response.status(400).send(`Webhook Error: ${err.message}`);
-    return;
+    console.error("Webhook signature verification failed.", err);
+    return res.sendStatus(400);
   }
 
-  console.log("Got payload: ", payload, event);
+  // Handle the event
+  switch (event.type) {
+    case "payment_intent.succeeded":
+      // Payment success event
+      const session = event.data.object;
+      // Extract relevant information from the session object
+      const paymentIntentId = session.payment_intent;
+      const customerId = session.customer;
+      const newdata = new NewDATA(session);
+      const data = await newdata.save();
+      console.log(data, "Got payload: ");
+      break;
+    default:
+      // Unexpected event type
+      console.log(`Unhandled event type: ${event.type}`);
+  }
 
-  response.status(200).end();
+  res.sendStatus(200);
+
 });
 
 app.listen(8000, () => console.log("Running on port 8000"));
