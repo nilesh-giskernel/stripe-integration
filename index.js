@@ -7,7 +7,7 @@ const stripe = require("stripe")(
   "sk_test_51P3c0JSAfVC4YVUYV1FtgetBWLpXkNkoqDnfT62VXwsQYSZDn0BsFfGwiuqCd15MZXVcXpOgWeLollKp6e4f8Hum00g5Y5f39i"
 );
 const mongoose = require("mongoose");
-
+app.use(express.json());
 //mongodb connections
 const connectDb = async () => {
   await mongoose.connect(
@@ -28,7 +28,7 @@ app.post("/checkout", async (req, res) => {
       description: "Payment for items",
     });
     console.log(paymentIntent, "step1");
-    // Create a checkout session using the payment intent
+    
     const session = await stripe.checkout.sessions.create({
       billing_address_collection: "required",
       payment_method_types: ["card"],
@@ -47,15 +47,10 @@ app.post("/checkout", async (req, res) => {
       }),
       success_url: "http://localhost:3001/success",
       cancel_url: "http://localhost:3001/failed",
-      // payment_intent_data: {
-      //   application_fee_amount: req.body.applicationFee * 100, // Application fee in cents
-      //   transfer_data: {
-      //     destination: req.body.transferDestination, // Destination for the transfer
-      //   },
-      // },
+    
     });
     console.log(session, "step2", paymentIntent);
-    const catsdata = new Cats(session);
+    const catsdata = new Cats({ session: session });
     const data = await catsdata.save();
     res.json({ session: session, paymentIntent: paymentIntent });
   } catch (error) {
@@ -68,7 +63,11 @@ app.post("/webhook", async (request, response) => {
   const sig = request.headers["stripe-signature"];
   let event;
   try {
-    event = stripe.webhooks.constructEvent(request.body, sig, process.env.SECRET_STRIPE_KEY);
+    event = stripe.webhooks.constructEvent(
+      request.body,
+      sig,
+      process.env.SECRET_STRIPE_KEY
+    );
   } catch (err) {
     console.error("Webhook signature verification failed.", err);
     return res.sendStatus(400);
@@ -92,7 +91,6 @@ app.post("/webhook", async (request, response) => {
   }
 
   res.sendStatus(200);
-
 });
 
 app.listen(8000, () => console.log("Running on port 8000"));
