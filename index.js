@@ -20,9 +20,9 @@ connectDb();
 app.use(express.json());
 app.use(cors({ origin: "*" }));
 
-app.post("/checkout", async (req, res) => {
+app.post("/checkout",  express.raw({ type: 'application/json' }), (req, res) => {
   try {
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = stripe.paymentIntents.create({
       amount: req.body.totalAmount * 100, // Total amount in unit
       currency: "usd",
       payment_method_types: ["card"],
@@ -30,7 +30,7 @@ app.post("/checkout", async (req, res) => {
     });
     console.log(paymentIntent, "step1");
 
-    const session = await stripe.checkout.sessions.create({
+    const session = stripe.checkout.sessions.create({
       billing_address_collection: "required",
       payment_method_types: ["card"],
       mode: "payment",
@@ -52,7 +52,7 @@ app.post("/checkout", async (req, res) => {
     });
     console.log(session, "step2", paymentIntent);
     const catsdata = new Cats({ session: session });
-    const data = await catsdata.save();
+    const data = catsdata.save();
     res.json({ session: session, paymentIntent: paymentIntent });
   } catch (error) {
     res.status(500).json({ error: error.message });
