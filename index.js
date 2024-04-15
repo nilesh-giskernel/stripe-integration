@@ -60,30 +60,25 @@ app.post("/checkout", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 const bodyParser = require("body-parser");
 
-app.post(
-  "/webhook",
-  bodyParser.raw({ type: "application/json" }),
-  async (request, response) => {
-    const payload = request.body;
-    let event;
-    
-    try {
-      event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
-      const newdata = new NewDATA(event);
-      const data = await newdata.save();
-      console.log(data,"Got payload: ");
-    } catch (err) {
-      response.status(400).send(`Webhook Error: ${err.message}`);
-      return;
-    }
-   
-    console.log("Got payload: " , payload, event);
+app.post("/webhook", bodyParser.json(), async (request, response) => {
+  const payload = request.body;
+  let event;
 
-    response.status(200).end();
+  try {
+    event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+    const newdata = new NewDATA(event);
+    const data = await newdata.save();
+    console.log(data, "Got payload: ");
+  } catch (err) {
+    response.status(400).send(`Webhook Error: ${err.message}`);
+    return;
   }
-);
+
+  console.log("Got payload: ", payload, event);
+
+  response.status(200).end();
+});
 
 app.listen(8000, () => console.log("Running on port 8000"));
