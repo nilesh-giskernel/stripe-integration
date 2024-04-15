@@ -59,12 +59,14 @@ app.post("/checkout", async (req, res) => {
 });
 const bodyParser = require("body-parser");
 
-app.post("/webhook", async (request, response) => {
+app.post("/webhook", bodyParser.raw({ type: 'application/json' }), async (request, response) => {
   const sig = request.headers["stripe-signature"];
   let event;
   try {
+    // Parse the request body as a string
+    const rawBody = request.body;
     event = stripe.webhooks.constructEvent(
-      request.body,
+      rawBody,
       sig,
       process.env.SECRET_STRIPE_KEY
     );
