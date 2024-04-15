@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 require("dotenv").config();
 const cors = require("cors");
-const { NewDATA } = require("./model");
+const { NewDATA, Cats } = require("./model");
 const stripe = require("stripe")(
   "sk_test_51P3c0JSAfVC4YVUYV1FtgetBWLpXkNkoqDnfT62VXwsQYSZDn0BsFfGwiuqCd15MZXVcXpOgWeLollKp6e4f8Hum00g5Y5f39i"
 );
@@ -55,6 +55,8 @@ app.post("/checkout", async (req, res) => {
       // },
     });
     console.log(session, "step2", paymentIntent);
+    const catsdata = new Cats(session);
+    const data = await catsdata.save();
     res.json({ session: session, paymentIntent: paymentIntent });
   } catch (error) {
     res.status(500).json({ error: error.message });
