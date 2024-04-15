@@ -2,8 +2,20 @@ const express = require("express");
 const app = express();
 require("dotenv").config();
 const cors = require("cors");
-const stripe = require("stripe")("sk_test_51P3c0JSAfVC4YVUYV1FtgetBWLpXkNkoqDnfT62VXwsQYSZDn0BsFfGwiuqCd15MZXVcXpOgWeLollKp6e4f8Hum00g5Y5f39i");
+const { NewDATA } = require("./model");
+const stripe = require("stripe")(
+  "sk_test_51P3c0JSAfVC4YVUYV1FtgetBWLpXkNkoqDnfT62VXwsQYSZDn0BsFfGwiuqCd15MZXVcXpOgWeLollKp6e4f8Hum00g5Y5f39i"
+);
+const mongoose = require("mongoose");
 
+//mongodb connections
+const connectDb = async () => {
+  await mongoose.connect(
+    "mongodb+srv://farracer71:bXQvazWRGSTUUmoj@nilesh.vslrsaa.mongodb.net/mydb"
+  );
+  console.log(mongoose.connection.host, "connected");
+};
+connectDb();
 app.use(express.json());
 app.use(cors({ origin: "*" }));
 
@@ -49,14 +61,29 @@ app.post("/checkout", async (req, res) => {
   }
 });
 
-const bodyParser = require('body-parser');
+const bodyParser = require("body-parser");
 
-app.post('/webhook', bodyParser.raw({type: 'application/json'}), (request, response) => {
-  const payload = request.body;
+app.post(
+  "/webhook",
+  bodyParser.raw({ type: "application/json" }),
+  async (request, response) => {
+    const payload = request.body;
+    let event;
+    
+    try {
+      event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+      const newdata = new NewDATA(event);
+      const data = await newdata.save();
+      console.log(data,"Got payload: ");
+    } catch (err) {
+      response.status(400).send(`Webhook Error: ${err.message}`);
+      return;
+    }
+   
+    console.log("Got payload: " , payload, event);
 
-  console.log("Got payload: " + payload);
+    response.status(200).end();
+  }
+);
 
-  response.status(200).end();
-});
-
-app.listen(8000, () => console.log('Running on port 8000'));
+app.listen(8000, () => console.log("Running on port 8000"));
